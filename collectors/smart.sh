@@ -28,18 +28,44 @@ run_smartctl() {
 
 smartctl_status_json() {
     local status="$1"
+    local command_line_error=false
+    local device_open_failed=false
+    local smart_command_failed=false
+    local health_failed=false
+    local prefail_attribute_failed=false
+    local error_log_contains_records=false
+    local self_test_log_contains_errors=false
+    local ata_error_log_contains_errors=false
 
-    jq -cn --argjson status "${status}" '
+    ((status & 1)) && command_line_error=true
+    ((status & 2)) && device_open_failed=true
+    ((status & 4)) && smart_command_failed=true
+    ((status & 8)) && health_failed=true
+    ((status & 16)) && prefail_attribute_failed=true
+    ((status & 32)) && error_log_contains_records=true
+    ((status & 64)) && self_test_log_contains_errors=true
+    ((status & 128)) && ata_error_log_contains_errors=true
+
+    jq -cn \
+        --argjson status "${status}" \
+        --argjson command_line_error "${command_line_error}" \
+        --argjson device_open_failed "${device_open_failed}" \
+        --argjson smart_command_failed "${smart_command_failed}" \
+        --argjson health_failed "${health_failed}" \
+        --argjson prefail_attribute_failed "${prefail_attribute_failed}" \
+        --argjson error_log_contains_records "${error_log_contains_records}" \
+        --argjson self_test_log_contains_errors "${self_test_log_contains_errors}" \
+        --argjson ata_error_log_contains_errors "${ata_error_log_contains_errors}" '
       {
         exit_status: $status,
-        command_line_error: (($status & 1) != 0),
-        device_open_failed: (($status & 2) != 0),
-        smart_command_failed: (($status & 4) != 0),
-        health_failed: (($status & 8) != 0),
-        prefail_attribute_failed: (($status & 16) != 0),
-        error_log_contains_records: (($status & 32) != 0),
-        self_test_log_contains_errors: (($status & 64) != 0),
-        ata_error_log_contains_errors: (($status & 128) != 0)
+        command_line_error: $command_line_error,
+        device_open_failed: $device_open_failed,
+        smart_command_failed: $smart_command_failed,
+        health_failed: $health_failed,
+        prefail_attribute_failed: $prefail_attribute_failed,
+        error_log_contains_records: $error_log_contains_records,
+        self_test_log_contains_errors: $self_test_log_contains_errors,
+        ata_error_log_contains_errors: $ata_error_log_contains_errors
       }'
 }
 
@@ -60,9 +86,7 @@ scan_file="$(mktemp)"
 trap 'rm -f "${scan_file}" "${device_file:-}"' EXIT
 
 scan_rc=0
-if ! run_smartctl "${scan_file}" --scan-open -j; then
-    scan_rc=$?
-fi
+run_smartctl "${scan_file}" --scan-open -j || scan_rc=$?
 
 scan_json="$(cat "${scan_file}")"
 if ! jq -e '.devices | type == "array"' >/dev/null 2>&1 <<<"${scan_json}"; then
@@ -91,9 +115,7 @@ while IFS=$'\t' read -r device dtype; do
 
     device_file="$(mktemp)"
     device_rc=0
-    if ! run_smartctl "${device_file}" -a -j -d "${dtype}" "${device}"; then
-        device_rc=$?
-    fi
+    run_smartctl "${device_file}" -a -j -d "${dtype}" "${device}" || device_rc=$?
 
     raw="$(cat "${device_file}")"
     rm -f "${device_file}"
