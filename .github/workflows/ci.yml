@@ -63,7 +63,22 @@ jobs:
         uses: actions/checkout@v4
       - name: Встановити PyYAML
         run: python3 -m pip install --quiet pyyaml
-      - name: Показати шаблони
-        run: find zabbix/templates -maxdepth 1 -type f -name '*.yaml' -print
       - name: Перевірити шаблони Zabbix 7.4
-        run: python3 tests/zabbix-template-test.py
+        id: validate
+        shell: bash
+        run: |
+          set +e
+          python3 tests/zabbix-template-test.py >zabbix-validation.txt 2>&1
+          rc=$?
+          echo "exit_code=${rc}" >>"${GITHUB_OUTPUT}"
+          exit 0
+      - name: Зберегти звіт перевірки
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zabbix-validation
+          path: zabbix-validation.txt
+      - name: Показати результат перевірки
+        run: |
+          cat zabbix-validation.txt
+          test "${{ steps.validate.outputs.exit_code }}" -eq 0
