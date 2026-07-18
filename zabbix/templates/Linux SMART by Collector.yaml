@@ -1,0 +1,65 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 11111111111111111111111111111111
+      name: Templates/Linux monitoring
+  templates:
+    - uuid: 22222222222222222222222222222222
+      template: 'Linux SMART by Collector'
+      name: 'Linux SMART by Collector'
+      groups:
+        - name: Templates/Linux monitoring
+      items:
+        - uuid: 33333333333333333333333333333333
+          name: 'SMART: Collector JSON'
+          type: ZABBIX_ACTIVE
+          key: smart.cache.json
+          history: '1d'
+          trends: '0'
+          value_type: TEXT
+          update_interval: 5m
+          tags:
+            - tag: component
+              value: storage
+      discovery_rules:
+        - uuid: 44444444444444444444444444444444
+          name: 'SMART disk discovery'
+          type: DEPENDENT
+          key: smart.disk.discovery
+          lifetime: '0'
+          master_item:
+            key: smart.cache.json
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.disks'
+          lld_macro_paths:
+            - lld_macro: '{#DEVICE}'
+              path: '$.device'
+            - lld_macro: '{#MODEL}'
+              path: '$.model'
+          item_prototypes:
+            - uuid: 55555555555555555555555555555555
+              name: 'SMART {#DEVICE}: health'
+              type: DEPENDENT
+              key: 'smart.health[{#DEVICE}]'
+              value_type: UNSIGNED
+              master_item:
+                key: smart.cache.json
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.disks[?(@.device=="{#DEVICE}")].smart_passed.first()'
+                - type: BOOL_TO_DECIMAL
+            - uuid: 66666666666666666666666666666666
+              name: 'SMART {#DEVICE}: temperature'
+              type: DEPENDENT
+              key: 'smart.temperature[{#DEVICE}]'
+              value_type: FLOAT
+              units: °C
+              master_item:
+                key: smart.cache.json
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.disks[?(@.device=="{#DEVICE}")].temperature_c.first()'

@@ -1,0 +1,17 @@
+[Unit]
+Description=Update linux-monitoring lm-sensors cache
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/update-linux-monitoring-sensors-cache.sh
+User=root
+Group=root
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/linux-monitoring

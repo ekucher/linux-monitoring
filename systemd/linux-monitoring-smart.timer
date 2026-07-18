@@ -1,0 +1,12 @@
+[Unit]
+Description=Run linux-monitoring smart collector periodically
+
+[Timer]
+OnBootSec=2m
+OnUnitActiveSec=5m
+AccuracySec=30s
+Persistent=true
+Unit=linux-monitoring-smart.service
+
+[Install]
+WantedBy=timers.target

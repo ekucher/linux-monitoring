@@ -1,0 +1,55 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: a1111111111111111111111111111111
+      name: Templates/Linux monitoring
+  templates:
+    - uuid: a2222222222222222222222222222222
+      template: 'Linux Sensors by Collector'
+      name: 'Linux Sensors by Collector'
+      groups:
+        - name: Templates/Linux monitoring
+      items:
+        - uuid: a3333333333333333333333333333333
+          name: 'Sensors: Collector JSON'
+          type: ZABBIX_ACTIVE
+          key: sensors.cache.json
+          history: '1d'
+          trends: '0'
+          value_type: TEXT
+          update_interval: 5m
+          tags:
+            - tag: component
+              value: sensors
+      discovery_rules:
+        - uuid: a4444444444444444444444444444444
+          name: 'Hardware sensor discovery'
+          type: DEPENDENT
+          key: sensors.reading.discovery
+          lifetime: '0'
+          master_item:
+            key: sensors.cache.json
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.readings'
+          lld_macro_paths:
+            - lld_macro: '{#SENSOR}'
+              path: '$.name'
+            - lld_macro: '{#METRIC}'
+              path: '$.metric'
+            - lld_macro: '{#UNIT}'
+              path: '$.unit'
+          item_prototypes:
+            - uuid: a5555555555555555555555555555555
+              name: 'Sensor {#SENSOR}'
+              type: DEPENDENT
+              key: 'sensors.value[{#SENSOR}]'
+              value_type: FLOAT
+              units: '{#UNIT}'
+              master_item:
+                key: sensors.cache.json
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.readings[?(@.name=="{#SENSOR}")].value.first()'
