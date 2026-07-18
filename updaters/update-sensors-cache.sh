@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+LIB_DIR="/usr/local/lib/linux-monitoring/lib"
 COLLECTOR="/usr/local/lib/linux-monitoring/collectors/sensors.sh"
-CACHE="/var/lib/linux-monitoring/sensors.json"
-TEMP="${CACHE}.tmp.$$"
 
-trap 'rm -f "${TEMP}"' EXIT
-"${COLLECTOR}" >"${TEMP}"
-jq -e . "${TEMP}" >/dev/null
-install -o root -g root -m 0644 "${TEMP}" "${CACHE}"
+# shellcheck source=/usr/local/lib/linux-monitoring/lib/config.sh
+source "${LIB_DIR}/config.sh"
+# shellcheck source=/usr/local/lib/linux-monitoring/lib/cache.sh
+source "${LIB_DIR}/cache.sh"
+# shellcheck source=/usr/local/lib/linux-monitoring/lib/logging.sh
+source "${LIB_DIR}/logging.sh"
+
+lm_load_config
+CACHE="${LM_CACHE_DIR}/sensors.json"
+
+lm_debug "Updating sensors cache: ${CACHE}"
+"${COLLECTOR}" | lm_write_json_cache "${CACHE}"
+lm_info "Sensors cache updated: ${CACHE}"
