@@ -33,8 +33,11 @@ jobs:
           find . -type f -name '*.sh' -print0 \
             | xargs -0 shellcheck --severity=warning
 
-      - name: Check collector formatting
-        run: shfmt -d -i 4 -ci collectors
+      - name: Check SMART collector formatting
+        run: shfmt -d -i 4 -ci collectors/smart.sh
+
+      - name: Check remaining collector formatting
+        run: shfmt -d -i 4 -ci collectors/common.sh collectors/sensors.sh
 
       - name: Check test formatting
         run: shfmt -d -i 4 -ci tests
