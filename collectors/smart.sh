@@ -74,11 +74,21 @@ normalize_device_class() {
     local protocol="$2"
 
     case "${dtype,,}:${protocol,,}" in
-        nvme*:* | *:nvme*) printf 'nvme\n' ;;
-        scsi*:* | sat+megaraid*:* | megaraid*:* | *:scsi*) printf 'scsi\n' ;;
-        sat*:* | ata*:* | *:ata*) printf 'ata\n' ;;
-        usb*:* | *:usb*) printf 'usb\n' ;;
-        *) printf 'unknown\n' ;;
+        nvme*:* | *:nvme*)
+            printf 'nvme\n'
+            ;;
+        scsi*:* | sat+megaraid*:* | megaraid*:* | *:scsi*)
+            printf 'scsi\n'
+            ;;
+        sat*:* | ata*:* | *:ata*)
+            printf 'ata\n'
+            ;;
+        usb*:* | *:usb*)
+            printf 'usb\n'
+            ;;
+        *)
+            printf 'unknown\n'
+            ;;
     esac
 }
 
