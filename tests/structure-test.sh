@@ -17,7 +17,9 @@ required=(
     systemd/linux-monitoring-sensors.service
     zabbix/linux-monitoring.conf
     docs/03-Installation.md
+    docs/09-SMART.md
     tests/core-test.sh
+    tests/smart-test.sh
 )
 
 for path in "${required[@]}"; do
