@@ -33,29 +33,8 @@ jobs:
           find . -type f -name '*.sh' -print0 \
             | xargs -0 shellcheck --severity=warning
 
-      - name: Prepare SMART formatting diff
-        id: smart_format
-        continue-on-error: true
-        run: |
-          shfmt -w -i 4 -ci collectors/smart.sh
-          git diff -- collectors/smart.sh > shfmt-smart.diff
-          test ! -s shfmt-smart.diff
-
-      - name: Upload SMART formatting diff
-        if: steps.smart_format.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: shfmt-smart-diff
-          path: shfmt-smart.diff
-
-      - name: Enforce SMART collector formatting
-        if: steps.smart_format.outcome == 'failure'
-        run: |
-          cat shfmt-smart.diff
-          exit 1
-
-      - name: Check remaining collector formatting
-        run: shfmt -d -i 4 -ci collectors/common.sh collectors/sensors.sh
+      - name: Check collector formatting
+        run: shfmt -d -i 4 -ci collectors
 
       - name: Check test formatting
         run: shfmt -d -i 4 -ci tests
