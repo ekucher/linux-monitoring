@@ -1,5 +1,5 @@
 [Unit]
-Description=Update linux-monitoring SMART cache
+Description=Оновлення SMART cache linux-monitoring
 After=local-fs.target
 
 [Service]
@@ -10,8 +10,14 @@ Group=root
 Nice=10
 IOSchedulingClass=best-effort
 IOSchedulingPriority=7
+TimeoutStartSec=120s
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictRealtime=true
 ReadWritePaths=/var/lib/linux-monitoring
