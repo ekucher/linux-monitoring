@@ -1,8 +1,8 @@
 SHELL := /bin/bash
 
-.PHONY: test syntax structure core smart
+.PHONY: test syntax structure core smart sensors installer
 
-test: syntax structure core smart
+test: syntax structure core smart sensors installer
 
 syntax:
 	bash ./tests/syntax-test.sh
@@ -15,3 +15,9 @@ core:
 
 smart:
 	bash ./tests/smart-test.sh
+
+sensors:
+	bash ./tests/sensors-test.sh
+
+installer:
+	bash ./tests/installer-test.sh
