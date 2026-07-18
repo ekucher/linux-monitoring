@@ -26,8 +26,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq shellcheck shfmt python3-yaml
 
-      - name: Запустити тести проєкту
-        run: make test
+      - name: Перевірити синтаксис
+        run: make syntax
+
+      - name: Перевірити структуру
+        run: make structure
+
+      - name: Перевірити спільне ядро
+        run: make core
+
+      - name: Перевірити SMART
+        run: make smart
+
+      - name: Перевірити Sensors
+        run: make sensors
+
+      - name: Перевірити інсталятор
+        run: make installer
+
+      - name: Перевірити шаблони Zabbix
+        run: make zabbix
 
       - name: Запустити ShellCheck
         run: |
@@ -53,6 +71,3 @@ jobs:
             systemd/linux-monitoring-smart.timer \
             systemd/linux-monitoring-sensors.service \
             systemd/linux-monitoring-sensors.timer
-
-      - name: Перевірити семантику шаблонів Zabbix 7.4
-        run: python3 tests/zabbix-template-test.py
