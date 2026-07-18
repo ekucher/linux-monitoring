@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'feature/**'
+      - 'fix/**'
   pull_request:
     branches:
       - main
@@ -17,42 +18,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Отримати репозиторій
         uses: actions/checkout@v4
 
-      - name: Install validation tools
+      - name: Встановити інструменти перевірки
         run: |
           sudo apt-get update
           sudo apt-get install -y jq shellcheck shfmt python3-yaml
 
-      - name: Run project tests
+      - name: Запустити тести проєкту
         run: make test
 
-      - name: Run ShellCheck
+      - name: Запустити ShellCheck
         run: |
           find . -type f -name '*.sh' -print0 \
             | xargs -0 shellcheck --severity=warning
 
-      - name: Check collector formatting
+      - name: Перевірити формат колекторів
         run: shfmt -d -i 4 -ci collectors
 
-      - name: Check test formatting
+      - name: Перевірити формат тестів
         run: shfmt -d -i 4 -ci tests
 
-      - name: Check project script formatting
+      - name: Перевірити формат системних скриптів
         run: |
           shfmt -d -i 4 -ci \
             install.sh uninstall.sh upgrade.sh \
             lib updaters
 
-      - name: Validate Zabbix YAML
+      - name: Перевірити systemd units
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import yaml
+          systemd-analyze verify \
+            systemd/linux-monitoring-smart.service \
+            systemd/linux-monitoring-smart.timer \
+            systemd/linux-monitoring-sensors.service \
+            systemd/linux-monitoring-sensors.timer
 
-          for path in Path('zabbix/templates').glob('*.yaml'):
-              with path.open(encoding='utf-8') as stream:
-                  yaml.safe_load(stream)
-              print(f'[PASS] {path}')
-          PY
+      - name: Перевірити семантику шаблонів Zabbix 7.4
+        run: python3 tests/zabbix-template-test.py
