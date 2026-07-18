@@ -35,8 +35,10 @@ jobs:
 
       - name: Check formatting
         run: |
-          find . -type f -name '*.sh' -print0 \
-            | xargs -0 shfmt -d -i 4 -ci
+          while IFS= read -r -d '' file; do
+            echo "[CHECK] ${file}"
+            shfmt -d -i 4 -ci "${file}"
+          done < <(find . -type f -name '*.sh' -print0)
 
       - name: Validate Zabbix YAML
         run: |
