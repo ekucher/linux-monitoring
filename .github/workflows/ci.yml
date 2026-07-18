@@ -50,6 +50,12 @@ jobs:
             lib updaters
       - name: Перевірити systemd units
         run: |
+          sudo install -D -m 0755 \
+            updaters/update-smart-cache.sh \
+            /usr/local/sbin/update-linux-monitoring-smart-cache.sh
+          sudo install -D -m 0755 \
+            updaters/update-sensors-cache.sh \
+            /usr/local/sbin/update-linux-monitoring-sensors-cache.sh
           systemd-analyze verify \
             systemd/linux-monitoring-smart.service \
             systemd/linux-monitoring-smart.timer \
