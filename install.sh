@@ -13,7 +13,7 @@ DEBUG=0
 log() { printf '[INFO] %s\n' "$*"; }
 error() { printf '[ERROR] %s\n' "$*" >&2; }
 run() {
-    if (( DRY_RUN )); then
+    if ((DRY_RUN)); then
         printf '[DRY-RUN]'
         printf ' %q' "$@"
         printf '\n'
@@ -40,31 +40,62 @@ EOF
 
 while (($#)); do
     case "$1" in
-        --timer-interval) TIMER_INTERVAL="${2:?missing value}"; shift 2 ;;
-        --modules) MODULES="${2:?missing value}"; shift 2 ;;
-        --skip-packages) SKIP_PACKAGES=1; shift ;;
-        --skip-agent-restart) SKIP_AGENT_RESTART=1; shift ;;
-        --run-sensors-detect) RUN_SENSORS_DETECT=1; shift ;;
-        --dry-run) DRY_RUN=1; shift ;;
-        --debug) DEBUG=1; shift ;;
-        -h|--help) usage; exit 0 ;;
-        *) error "Unknown option: $1"; usage; exit 2 ;;
+        --timer-interval)
+            TIMER_INTERVAL="${2:?missing value}"
+            shift 2
+            ;;
+        --modules)
+            MODULES="${2:?missing value}"
+            shift 2
+            ;;
+        --skip-packages)
+            SKIP_PACKAGES=1
+            shift
+            ;;
+        --skip-agent-restart)
+            SKIP_AGENT_RESTART=1
+            shift
+            ;;
+        --run-sensors-detect)
+            RUN_SENSORS_DETECT=1
+            shift
+            ;;
+        --dry-run)
+            DRY_RUN=1
+            shift
+            ;;
+        --debug)
+            DEBUG=1
+            shift
+            ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        *)
+            error "Unknown option: $1"
+            usage
+            exit 2
+            ;;
     esac
 done
 
-(( DEBUG )) && set -x
+((DEBUG)) && set -x
 
-if (( EUID != 0 )); then
+if ((EUID != 0)); then
     error "Run as root."
     exit 1
 fi
 
 case ",${MODULES}," in
-    *,smart,*|*,sensors,*) ;;
-    *) error "No supported modules selected."; exit 2 ;;
+    *,smart,* | *,sensors,*) ;;
+    *)
+        error "No supported modules selected."
+        exit 2
+        ;;
 esac
 
-if (( ! SKIP_PACKAGES )); then
+if ((!SKIP_PACKAGES)); then
     packages=(jq)
     [[ ",${MODULES}," == *,smart,* ]] && packages+=(smartmontools)
     [[ ",${MODULES}," == *,sensors,* ]] && packages+=(lm-sensors)
@@ -114,7 +145,7 @@ run install -o root -g root -m 0644 \
     "${PROJECT_DIR}/zabbix/linux-monitoring.conf" \
     /etc/zabbix/zabbix_agent2.d/linux-monitoring.conf
 
-if (( RUN_SENSORS_DETECT )) && [[ ",${MODULES}," == *,sensors,* ]]; then
+if ((RUN_SENSORS_DETECT)) && [[ ",${MODULES}," == *,sensors,* ]]; then
     if command -v sensors-detect >/dev/null 2>&1; then
         log "Running sensors-detect --auto"
         run sensors-detect --auto
@@ -130,7 +161,7 @@ for module in smart sensors; do
     fi
 done
 
-if (( ! SKIP_AGENT_RESTART )); then
+if ((!SKIP_AGENT_RESTART)); then
     if systemctl list-unit-files zabbix-agent2.service >/dev/null 2>&1; then
         run systemctl restart zabbix-agent2
     else
@@ -138,7 +169,7 @@ if (( ! SKIP_AGENT_RESTART )); then
     fi
 fi
 
-if (( ! DRY_RUN )); then
+if ((!DRY_RUN)); then
     for module in smart sensors; do
         if [[ ",${MODULES}," == *,"${module}",* ]]; then
             jq -e . "/var/lib/linux-monitoring/${module}.json" >/dev/null
