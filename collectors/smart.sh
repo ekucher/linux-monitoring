@@ -74,21 +74,11 @@ normalize_device_class() {
     local protocol="$2"
 
     case "${dtype,,}:${protocol,,}" in
-        nvme*:* | *:nvme*)
-            printf 'nvme\n'
-            ;;
-        scsi*:* | sat+megaraid*:* | megaraid*:* | *:scsi*)
-            printf 'scsi\n'
-            ;;
-        sat*:* | ata*:* | *:ata*)
-            printf 'ata\n'
-            ;;
-        usb*:* | *:usb*)
-            printf 'usb\n'
-            ;;
-        *)
-            printf 'unknown\n'
-            ;;
+        nvme*:* | *:nvme*) printf 'nvme\n' ;;
+        scsi*:* | sat+megaraid*:* | megaraid*:* | *:scsi*) printf 'scsi\n' ;;
+        sat*:* | ata*:* | *:ata*) printf 'ata\n' ;;
+        usb*:* | *:usb*) printf 'usb\n' ;;
+        *) printf 'unknown\n' ;;
     esac
 }
 
@@ -97,7 +87,6 @@ trap 'rm -f "${scan_file}" "${device_file:-}"' EXIT
 
 scan_rc=0
 run_smartctl "${scan_file}" --scan-open -j || scan_rc=$?
-
 scan_json="$(cat "${scan_file}")"
 if ! jq -e '.devices | type == "array"' >/dev/null 2>&1 <<<"${scan_json}"; then
     scan_json='{"devices":[]}'
@@ -126,7 +115,6 @@ while IFS=$'\t' read -r device dtype; do
     device_file="$(mktemp)"
     device_rc=0
     run_smartctl "${device_file}" -a -j -d "${dtype}" "${device}" || device_rc=$?
-
     raw="$(cat "${device_file}")"
     rm -f "${device_file}"
     device_file=""
@@ -154,9 +142,9 @@ while IFS=$'\t' read -r device dtype; do
             --arg dtype "${dtype}" \
             --arg device_class "${device_class}" \
             --argjson command_status "${status_json}" '
-          def n(v): if v == null then 0 else v end;
+          def metric(v): if v == null then null else v end;
           def attr(id):
-            ([.ata_smart_attributes.table[]? | select((.id // 0) == id) | (.raw.value // 0)] | first) // 0;
+            ([.ata_smart_attributes.table[]? | select((.id // 0) == id) | .raw.value] | first) // null;
           {
             device: $device,
             device_type: $dtype,
@@ -166,26 +154,26 @@ while IFS=$'\t' read -r device dtype; do
             serial: (.serial_number // ""),
             firmware: (.firmware_version // ""),
             protocol: (.device.protocol // ""),
-            capacity_bytes: n(.user_capacity.bytes),
-            rotation_rate: n(.rotation_rate),
+            capacity_bytes: metric(.user_capacity.bytes),
+            rotation_rate: metric(.rotation_rate),
             form_factor: (.form_factor.name // ""),
-            smart_available: (.smart_support.available // true),
-            smart_enabled: (.smart_support.enabled // true),
+            smart_available: (.smart_support.available // null),
+            smart_enabled: (.smart_support.enabled // null),
             smart_passed: (.smart_status.passed // (if $command_status.health_failed then false else null end)),
             smartctl: $command_status,
             smartctl_exit_status: $command_status.exit_status,
-            temperature_c: n(.temperature.current),
-            power_on_hours: n(.power_on_time.hours),
-            power_cycle_count: n(.power_cycle_count),
-            wear_used_percent: n(.nvme_smart_health_information_log.percentage_used),
-            available_spare_percent: n(.nvme_smart_health_information_log.available_spare),
-            available_spare_threshold_percent: n(.nvme_smart_health_information_log.available_spare_threshold),
-            media_errors: n(.nvme_smart_health_information_log.media_errors),
-            unsafe_shutdowns: n(.nvme_smart_health_information_log.unsafe_shutdowns),
-            critical_warning: n(.nvme_smart_health_information_log.critical_warning),
-            data_units_read: n(.nvme_smart_health_information_log.data_units_read),
-            data_units_written: n(.nvme_smart_health_information_log.data_units_written),
-            ata_error_log_count: n(.ata_smart_error_log.summary.count),
+            temperature_c: metric(.temperature.current),
+            power_on_hours: metric(.power_on_time.hours),
+            power_cycle_count: metric(.power_cycle_count),
+            wear_used_percent: metric(.nvme_smart_health_information_log.percentage_used),
+            available_spare_percent: metric(.nvme_smart_health_information_log.available_spare),
+            available_spare_threshold_percent: metric(.nvme_smart_health_information_log.available_spare_threshold),
+            media_errors: metric(.nvme_smart_health_information_log.media_errors),
+            unsafe_shutdowns: metric(.nvme_smart_health_information_log.unsafe_shutdowns),
+            critical_warning: metric(.nvme_smart_health_information_log.critical_warning),
+            data_units_read: metric(.nvme_smart_health_information_log.data_units_read),
+            data_units_written: metric(.nvme_smart_health_information_log.data_units_written),
+            ata_error_log_count: metric(.ata_smart_error_log.summary.count),
             reallocated_sectors: attr(5),
             reported_uncorrectable_errors: attr(187),
             command_timeout: attr(188),
@@ -210,9 +198,7 @@ while IFS=$'\t' read -r device dtype; do
                 '. + [{scope: "device", device: $device, device_type: $dtype, message: $message, smartctl: $status}]' <<<"${errors}"
         )"
     fi
-done < <(
-    jq -r '.devices[]? | [(.name // ""), (.type // "auto")] | @tsv' <<<"${scan_json}"
-)
+done < <(jq -r '.devices[]? | [(.name // ""), (.type // "auto")] | @tsv' <<<"${scan_json}")
 
 finished_ns="$(date +%s%N)"
 duration_ms=$(((finished_ns - started_ns) / 1000000))

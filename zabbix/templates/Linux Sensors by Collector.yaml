@@ -1,16 +1,16 @@
 zabbix_export:
   version: '7.4'
   template_groups:
-    - uuid: a1111111111111111111111111111111
+    - uuid: 84f59250a5ce491e9bcdc0bf87c45e60
       name: Templates/Linux monitoring
   templates:
-    - uuid: a2222222222222222222222222222222
+    - uuid: 3ee13084710748b08e533e2b7195691a
       template: 'Linux Sensors by Collector'
       name: 'Linux Sensors by Collector'
       groups:
         - name: Templates/Linux monitoring
       items:
-        - uuid: a3333333333333333333333333333333
+        - uuid: 06abb3b6cb764475993cc935240c878e
           name: 'Sensors: Collector JSON'
           type: ZABBIX_ACTIVE
           key: sensors.cache.json
@@ -21,8 +21,36 @@ zabbix_export:
           tags:
             - tag: component
               value: sensors
+        - uuid: 7bd867cfd0c24aa699f2642bff1f064b
+          name: 'Sensors: Collector status'
+          type: DEPENDENT
+          key: sensors.collector.status
+          value_type: CHAR
+          master_item:
+            key: sensors.cache.json
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.status'
+          tags:
+            - tag: component
+              value: sensors
+        - uuid: 263bf9d0488e44a69267e951362f4185
+          name: 'Sensors: Reading count'
+          type: DEPENDENT
+          key: sensors.collector.reading_count
+          value_type: UNSIGNED
+          master_item:
+            key: sensors.cache.json
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.reading_count'
+          tags:
+            - tag: component
+              value: sensors
       discovery_rules:
-        - uuid: a4444444444444444444444444444444
+        - uuid: 8d2bc730cdf141a8bd536987212e9843
           name: 'Hardware sensor discovery'
           type: DEPENDENT
           key: sensors.reading.discovery
@@ -41,7 +69,7 @@ zabbix_export:
             - lld_macro: '{#UNIT}'
               path: '$.unit'
           item_prototypes:
-            - uuid: a5555555555555555555555555555555
+            - uuid: 3e8d0e43a7eb491892f08b043db4a898
               name: 'Sensor {#SENSOR}'
               type: DEPENDENT
               key: 'sensors.value[{#SENSOR}]'
@@ -53,3 +81,4 @@ zabbix_export:
                 - type: JSONPATH
                   parameters:
                     - '$.readings[?(@.name=="{#SENSOR}")].value.first()'
+                  error_handler: DISCARD_VALUE
