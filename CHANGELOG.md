@@ -6,6 +6,11 @@
 - Додано файл `/etc/linux-monitoring/linux-monitoring.conf` із параметрами cache, log level і timer interval.
 - SMART та Sensors updater переведено на спільне ядро.
 - Додано автоматичні тести core runtime.
+- SMART collector переведено на schema version 2 зі службовими полями `status`, `duration_ms`, `errors` і `discovery`.
+- Додано коректне декодування всіх бітів exit status `smartctl`.
+- Додано нормалізацію класів ATA, SCSI/SAS, NVMe та USB-пристроїв.
+- Розширено набір ATA та NVMe метрик без зміни масиву `disks` і чинних ключів.
+- Додано детерміновані fixture-тести для ATA, NVMe, SMART health failure та помилки відкриття пристрою.
 
 ## 2.0.0 — 2026-07-18
 

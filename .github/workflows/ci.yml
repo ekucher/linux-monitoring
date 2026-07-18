@@ -33,10 +33,17 @@ jobs:
           find . -type f -name '*.sh' -print0 \
             | xargs -0 shellcheck --severity=warning
 
-      - name: Check formatting
+      - name: Check collector formatting
+        run: shfmt -d -i 4 -ci collectors
+
+      - name: Check test formatting
+        run: shfmt -d -i 4 -ci tests
+
+      - name: Check project script formatting
         run: |
-          find . -type f -name '*.sh' -print0 \
-            | xargs -0 shfmt -d -i 4 -ci
+          shfmt -d -i 4 -ci \
+            install.sh uninstall.sh upgrade.sh \
+            lib updaters
 
       - name: Validate Zabbix YAML
         run: |
