@@ -5,16 +5,22 @@ KEEP_CACHE=0
 
 while (($#)); do
     case "$1" in
-        --keep-cache) KEEP_CACHE=1; shift ;;
-        -h|--help)
+        --keep-cache)
+            KEEP_CACHE=1
+            shift
+            ;;
+        -h | --help)
             echo "Usage: sudo ./uninstall.sh [--keep-cache]"
             exit 0
             ;;
-        *) echo "[ERROR] Unknown option: $1" >&2; exit 2 ;;
+        *)
+            echo "[ERROR] Unknown option: $1" >&2
+            exit 2
+            ;;
     esac
 done
 
-if (( EUID != 0 )); then
+if ((EUID != 0)); then
     echo "[ERROR] Run as root." >&2
     exit 1
 fi
@@ -36,7 +42,7 @@ rm -f \
 rmdir /usr/local/lib/linux-monitoring/collectors 2>/dev/null || true
 rmdir /usr/local/lib/linux-monitoring 2>/dev/null || true
 
-if (( ! KEEP_CACHE )); then
+if ((!KEEP_CACHE)); then
     rm -rf /var/lib/linux-monitoring
 fi
 
