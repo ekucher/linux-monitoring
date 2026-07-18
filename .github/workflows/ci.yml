@@ -14,56 +14,40 @@ permissions:
   contents: read
 
 jobs:
-  validate:
+  shell:
     runs-on: ubuntu-latest
-
     steps:
       - name: Отримати репозиторій
         uses: actions/checkout@v4
-
       - name: Встановити інструменти перевірки
         run: |
           sudo apt-get update
           sudo apt-get install -y jq shellcheck shfmt python3-yaml
-
       - name: Перевірити синтаксис
         run: make syntax
-
       - name: Перевірити структуру
         run: make structure
-
       - name: Перевірити спільне ядро
         run: make core
-
       - name: Перевірити SMART
         run: make smart
-
       - name: Перевірити Sensors
         run: make sensors
-
       - name: Перевірити інсталятор
         run: make installer
-
-      - name: Перевірити шаблони Zabbix
-        run: make zabbix
-
       - name: Запустити ShellCheck
         run: |
           find . -type f -name '*.sh' -print0 \
             | xargs -0 shellcheck --severity=warning
-
       - name: Перевірити формат колекторів
         run: shfmt -d -i 4 -ci collectors
-
       - name: Перевірити формат тестів
         run: shfmt -d -i 4 -ci tests
-
       - name: Перевірити формат системних скриптів
         run: |
           shfmt -d -i 4 -ci \
             install.sh uninstall.sh upgrade.sh \
             lib updaters
-
       - name: Перевірити systemd units
         run: |
           systemd-analyze verify \
@@ -71,3 +55,15 @@ jobs:
             systemd/linux-monitoring-smart.timer \
             systemd/linux-monitoring-sensors.service \
             systemd/linux-monitoring-sensors.timer
+
+  zabbix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Отримати репозиторій
+        uses: actions/checkout@v4
+      - name: Встановити PyYAML
+        run: python3 -m pip install --quiet pyyaml
+      - name: Показати шаблони
+        run: find zabbix/templates -maxdepth 1 -type f -name '*.yaml' -print
+      - name: Перевірити шаблони Zabbix 7.4
+        run: python3 tests/zabbix-template-test.py
