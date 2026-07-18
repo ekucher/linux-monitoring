@@ -1,19 +1,29 @@
 # linux-monitoring 2.0.0
 
-Модульний набір колекторів для Zabbix Agent 2.
+Production-набір колекторів для Zabbix Agent 2.
 
-Поточні модулі:
+## Підтримуване середовище
+
+- Debian 13;
+- Proxmox VE 8;
+- Zabbix Agent 2 7.4.
+
+Інші платформи та версії не входять до підтримуваної конфігурації.
+
+## Підтримувані колектори
 
 - **SMART** — стан SATA/SAS/NVMe накопичувачів через `smartctl`.
 - **Sensors** — температури, вентилятори, напруги, потужність та інші сенсори через `lm-sensors`.
 
-Кожен модуль працює незалежно:
+Наявність колектора у репозиторії означає, що він реалізований, протестований, задокументований, перевірений на реальному обладнанні та готовий до production-використання. Порожні модулі, placeholder, TODO-модулі та заготовки майбутніх колекторів не допускаються.
+
+Кожен колектор працює незалежно:
 
 ```text
 collector -> JSON cache -> Zabbix Agent Alias -> master item -> dependent items
 ```
 
-## Швидкий старт на новому Debian/Proxmox сервері
+## Швидкий старт на новому сервері
 
 ```bash
 sudo apt update
@@ -38,13 +48,20 @@ zabbix_agent2 -t smart.cache.json
 zabbix_agent2 -t sensors.cache.json
 ```
 
-Детальна покрокова інструкція:
+## Документація
 
+- [Вступ і потік даних](docs/01-Introduction.md)
 - [Вимоги](docs/02-Requirements.md)
 - [Розгортання на новому сервері](docs/03-Installation.md)
 - [Налаштування Zabbix](docs/04-Zabbix-Configuration.md)
 - [Перевірка](docs/05-Verification.md)
+- [Оновлення](docs/06-Upgrade.md)
+- [Видалення](docs/07-Uninstall.md)
 - [Діагностика](docs/08-Troubleshooting.md)
+- [Принципи проєктування](DESIGN_PRINCIPLES.md)
+- [Тестування](TESTING.md)
+- [Участь у розробці](CONTRIBUTING.md)
+- [Політика безпеки](SECURITY.md)
 
 ## Параметри інсталятора
 
