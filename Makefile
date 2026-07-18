@@ -5,7 +5,7 @@ SHELL := /bin/bash
 test: syntax structure
 
 syntax:
-	./tests/syntax-test.sh
+	bash ./tests/syntax-test.sh
 
 structure:
-	./tests/structure-test.sh
+	bash ./tests/structure-test.sh
