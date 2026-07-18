@@ -1,8 +1,8 @@
 SHELL := /bin/bash
 
-.PHONY: test syntax structure core smart sensors installer
+.PHONY: test syntax structure core smart sensors installer zabbix
 
-test: syntax structure core smart sensors installer
+test: syntax structure core smart sensors installer zabbix
 
 syntax:
 	bash ./tests/syntax-test.sh
@@ -21,3 +21,6 @@ sensors:
 
 installer:
 	bash ./tests/installer-test.sh
+
+zabbix:
+	python3 ./tests/zabbix-template-test.py
