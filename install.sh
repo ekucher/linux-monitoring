@@ -106,12 +106,28 @@ fi
 
 run install -d -o root -g root -m 0755 \
     /usr/local/lib/linux-monitoring/collectors \
+    /usr/local/lib/linux-monitoring/lib \
     /var/lib/linux-monitoring \
+    /etc/linux-monitoring \
     /etc/zabbix/zabbix_agent2.d
 
 run install -o root -g root -m 0755 \
     "${PROJECT_DIR}/collectors/common.sh" \
     /usr/local/lib/linux-monitoring/collectors/common.sh
+
+for library in "${PROJECT_DIR}"/lib/*.sh; do
+    run install -o root -g root -m 0644 \
+        "${library}" \
+        "/usr/local/lib/linux-monitoring/lib/$(basename -- "${library}")"
+done
+
+if [[ ! -e /etc/linux-monitoring/linux-monitoring.conf ]]; then
+    run install -o root -g root -m 0644 \
+        "${PROJECT_DIR}/config/linux-monitoring.conf" \
+        /etc/linux-monitoring/linux-monitoring.conf
+else
+    log "Preserving existing /etc/linux-monitoring/linux-monitoring.conf"
+fi
 
 install_module() {
     local module="$1"
