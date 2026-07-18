@@ -11,9 +11,16 @@ lm_write_json_cache() {
     directory="$(dirname -- "${destination}")"
     temporary="$(mktemp "${directory}/.$(basename -- "${destination}").tmp.XXXXXX")"
 
-    trap 'rm -f "${temporary}"' RETURN
+    if ! cat >"${temporary}"; then
+        rm -f "${temporary}"
+        return 1
+    fi
 
-    cat >"${temporary}"
-    jq -e . "${temporary}" >/dev/null
+    if ! jq -e . "${temporary}" >/dev/null; then
+        rm -f "${temporary}"
+        return 1
+    fi
+
     install -o "${owner}" -g "${group}" -m "${mode}" "${temporary}" "${destination}"
+    rm -f "${temporary}"
 }
