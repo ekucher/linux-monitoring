@@ -9,10 +9,15 @@ required=(
     uninstall.sh
     collectors/smart.sh
     collectors/sensors.sh
+    lib/cache.sh
+    lib/config.sh
+    lib/logging.sh
+    config/linux-monitoring.conf
     systemd/linux-monitoring-smart.service
     systemd/linux-monitoring-sensors.service
     zabbix/linux-monitoring.conf
     docs/03-Installation.md
+    tests/core-test.sh
 )
 
 for path in "${required[@]}"; do
